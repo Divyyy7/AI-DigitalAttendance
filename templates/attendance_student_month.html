@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Report: {{ student.full_name }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; }
+
+        /* Sidebar Copy */
+        .sidebar { width: 280px; height: 100vh; background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%); position: fixed; left: 0; top: 0; padding: 30px 20px; overflow-y: auto; }
+        .sidebar-header { margin-bottom: 40px; text-align: center; }
+        .sidebar-logo { width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .sidebar-title { color: white; font-size: 20px; font-weight: 700; }
+        .sidebar-menu { list-style: none; }
+        .menu-item a { display: flex; align-items: center; padding: 14px 18px; color: #cbd5e0; text-decoration: none; border-radius: 12px; transition: all 0.3s; font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+        .menu-item a:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+        .menu-item a.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .menu-icon { margin-right: 12px; }
+        .menu-separator { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .logout-item a { background: rgba(239,68,68,0.2); color: #fc8181; }
+
+        .main-content { margin-left: 280px; padding: 40px; min-height: 100vh; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        /* Stats Summary */
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .summary-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; }
+        .summary-card h3 { font-size: 32px; font-weight: 700; margin-bottom: 5px; }
+        .summary-card p { font-size: 14px; color: #718096; }
+        
+        .text-green { color: #16a34a; }
+        .text-red { color: #dc2626; }
+        .text-blue { color: #2563eb; }
+
+        /* Table */
+        .table-container { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 15px 20px; text-align: left; background: #f7fafc; color: #4a5568; font-weight: 600; font-size: 14px; }
+        td { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; color: #2d3748; }
+        
+        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
+        .pill-present { background: #dcfce7; color: #166534; }
+        .pill-absent { background: #fee2e2; color: #991b1b; }
+
+        .btn-export { background: #3b82f6; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+        .btn-export:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">📊</div>
+            <div class="sidebar-title">Digital Attendance</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="/dashboard"><span class="menu-icon">🏠</span> Dashboard</a></li>
+            <li class="menu-item"><a href="/students/add"><span class="menu-icon">➕</span> Add Student</a></li>
+            <li class="menu-item"><a href="/students"><span class="menu-icon">👥</span> Student Database</a></li>
+            <li class="menu-item"><a href="/webcam"><span class="menu-icon">📸</span> Webcam Scanner</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item"><a href="/attendance/today"><span class="menu-icon">📅</span> Today's Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/monthly"><span class="menu-icon">📊</span> Monthly Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/student_list" class="active"><span class="menu-icon">📝</span> Student Reports</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item logout-item"><a href="/logout"><span class="menu-icon">🚪</span> Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 style="font-size:28px; margin-bottom:5px;">{{ student.full_name }}</h1>
+                <p style="color:#718096;">Roll No: {{ student.roll_no }} • Report for {{ month }}/{{ year }}</p>
+            </div>
+            <a href="/export_student_month/{{ student.id }}" class="btn-export">📥 Export Excel</a>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>{{ summary.total_days }}</h3>
+                <p>Working Days</p>
+            </div>
+            <div class="summary-card">
+                <h3 class="text-green">{{ summary.present }}</h3>
+                <p>Days Present</p>
+            </div>
+            <div class="summary-card">
+                <h3 class="text-red">{{ summary.absent }}</h3>
+                <p>Days Absent</p>
+            </div>
+            <div class="summary-card">
+                <h3 class="text-blue">{{ summary.percentage }}%</h3>
+                <p>Attendance Rate</p>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Day of Week</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.date }}</td>
+                        <td>{{ r.day_of_week }}</td>
+                        <td>
+                            {% if r.status == "Present" %}
+                                <span class="status-pill pill-present">Present</span>
+                            {% else %}
+                                <span class="status-pill pill-absent">Absent</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" style="text-align:center;">No records found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

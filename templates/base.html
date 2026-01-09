@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Digital Attendance</title>
+
+    <!-- Correct Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+
+<div class="flex h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-900 text-white p-6 space-y-4">
+
+        <h1 class="text-2xl font-bold mb-8">Digital Attendance</h1>
+
+        <nav class="space-y-2">
+            <a href="/dashboard" class="block p-2 rounded hover:bg-gray-700">Dashboard</a>
+            <a href="/students" class="block p-2 rounded hover:bg-gray-700">Student Database</a>
+            <a href="/students/add" class="block p-2 rounded hover:bg-gray-700">Add Student</a>
+            <a href="/attendance/today" class="block p-2 rounded hover:bg-gray-700">Today's Attendance</a>
+            <a href="/attendance/calendar" class="block p-2 rounded hover:bg-gray-700">Monthly Attendance</a>
+
+            <a href="/webcam/start" class="block p-2 bg-green-700 rounded hover:bg-green-600">Start Webcam</a>
+            <a href="/logout" class="block p-2 bg-red-700 rounded hover:bg-red-600 mt-6">Logout</a>
+        </nav>
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8 overflow-y-auto">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+
+</body>
+</html>

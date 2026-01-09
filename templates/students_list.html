@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Database - Digital Attendance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+        }
+
+        /* --- Sidebar Styles --- */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 30px 20px;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header { margin-bottom: 40px; text-align: center; }
+        
+        .sidebar-logo {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px; margin: 0 auto 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px;
+        }
+
+        .sidebar-title { color: white; font-size: 20px; font-weight: 700; }
+        .sidebar-menu { list-style: none; }
+        .menu-item { margin-bottom: 8px; }
+
+        .menu-item a {
+            display: flex; align-items: center; padding: 14px 18px;
+            color: #cbd5e0; text-decoration: none; border-radius: 12px;
+            transition: all 0.3s ease; font-size: 15px; font-weight: 500;
+        }
+
+        .menu-item a:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+        .menu-item a.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .menu-icon { margin-right: 12px; font-size: 20px; width: 24px; text-align: center; }
+        .menu-separator { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 20px 0; }
+        .logout-item a { background: rgba(239, 68, 68, 0.2); color: #fc8181; }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: 280px;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 { font-size: 32px; color: #2d3748; }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 12px 24px; border-radius: 10px;
+            text-decoration: none; font-weight: 600; display: flex; gap: 8px;
+            transition: transform 0.2s;
+        }
+        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+
+        /* --- Search Bar --- */
+        .search-container {
+            background: white; padding: 20px; border-radius: 16px;
+            margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0; position: relative;
+        }
+
+        .search-input {
+            width: 100%; padding: 12px 12px 12px 45px;
+            border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px;
+            outline: none; transition: 0.3s;
+        }
+        .search-input:focus { border-color: #667eea; }
+        .search-icon { position: absolute; left: 35px; top: 50%; transform: translateY(-50%); color: #a0aec0; }
+
+        /* --- Grid Layout --- */
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        /* --- Student Card --- */
+        .student-card {
+            background: white; border-radius: 16px; padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+            transition: 0.3s; position: relative; overflow: hidden;
+        }
+
+        .student-card:hover {
+            transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        /* Gradient Top Border on Hover */
+        .student-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 4px; background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0); transition: 0.3s;
+        }
+        .student-card:hover::before { transform: scaleX(1); }
+
+        .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        
+        .avatar {
+            width: 60px; height: 60px; background: #e2e8f0;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; color: #4a5568;
+        }
+
+        .info h3 { font-size: 18px; color: #2d3748; margin-bottom: 4px; }
+        .info span { font-size: 14px; color: #718096; background: #f7fafc; padding: 2px 8px; border-radius: 10px; }
+
+        .details { margin-bottom: 20px; }
+        .detail-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #718096; margin-bottom: 8px; }
+
+        /* --- Actions --- */
+        .card-actions { display: flex; gap: 10px; }
+        
+        .btn-action {
+            flex: 1; padding: 8px; border-radius: 8px; text-align: center;
+            text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s;
+        }
+        
+        .btn-edit { background: #edf2f7; color: #4a5568; }
+        .btn-edit:hover { background: #cbd5e0; }
+        
+        .btn-delete { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+        .btn-delete:hover { background: rgba(239, 68, 68, 0.2); }
+
+        /* Empty State */
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 50px; color: #a0aec0; }
+
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0; padding: 20px; }
+            .sidebar { display: none; } /* Hide sidebar on mobile for now */
+            .page-header { flex-direction: column; gap: 15px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">📊</div>
+            <div class="sidebar-title">Digital Attendance</div>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="/dashboard"><span class="menu-icon">🏠</span> Dashboard</a></li>
+            <li class="menu-item"><a href="/students/add"><span class="menu-icon">➕</span> Add Student</a></li>
+            <li class="menu-item"><a href="/students" class="active"><span class="menu-icon">👥</span> Student Database</a></li>
+            <li class="menu-item"><a href="/webcam"><span class="menu-icon">📸</span> Webcam Scanner</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item logout-item"><a href="/logout"><span class="menu-icon">🚪</span> Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Student Database</h1>
+            <a href="/students/add" class="btn-add">➕ Add New Student</a>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search by name or roll number...">
+        </div>
+
+        <div class="students-grid" id="studentsGrid">
+            {% if students %}
+                {% for s in students %}
+                <div class="student-card" data-name="{{ s.full_name|lower }}" data-roll="{{ s.roll_no|lower }}">
+                    <div class="card-header">
+                        <div class="avatar">👤</div>
+                        <div class="info">
+                            <h3>{{ s.full_name }}</h3>
+                            <span>Roll No: {{ s.roll_no }}</span>
+                        </div>
+                    </div>
+
+                    <div class="details">
+                        {% if s.mobile %}
+                        <div class="detail-row">
+                            <span>📱 {{ s.mobile }}</span>
+                        </div>
+                        {% endif %}
+                        {% if s.email %}
+                        <div class="detail-row">
+                            <span>✉️ {{ s.email }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-actions">
+                        <a href="#" class="btn-action btn-edit" onclick="alert('Update feature coming soon!')">✏️ Edit</a>
+                        
+                        <a href="/students/delete/{{ s.id }}" class="btn-action btn-delete" 
+                           onclick="return confirm('Are you sure you want to delete {{ s.full_name }}?');">
+                           🗑️ Delete
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <h2>No Students Found</h2>
+                    <p>Click "Add New Student" to get started.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const cards = document.querySelectorAll('.student-card');
+
+        searchInput.addEventListener('keyup', (e) => {
+            const term = e.target.value.toLowerCase();
+
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                const roll = card.getAttribute('data-roll');
+
+                if (name.includes(term) || roll.includes(term)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

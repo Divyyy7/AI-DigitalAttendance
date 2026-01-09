@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Reports - Digital Attendance</title>
+    <style>
+        /* Shared Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; }
+        
+        .sidebar { width: 280px; height: 100vh; background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%); position: fixed; left: 0; top: 0; padding: 30px 20px; overflow-y: auto; }
+        .sidebar-header { margin-bottom: 40px; text-align: center; }
+        .sidebar-logo { width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .sidebar-title { color: white; font-size: 20px; font-weight: 700; }
+        .sidebar-menu { list-style: none; }
+        .menu-item a { display: flex; align-items: center; padding: 14px 18px; color: #cbd5e0; text-decoration: none; border-radius: 12px; transition: all 0.3s; font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+        .menu-item a:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+        .menu-item a.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .menu-icon { margin-right: 12px; }
+        .menu-separator { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .logout-item a { background: rgba(239,68,68,0.2); color: #fc8181; }
+
+        .main-content { margin-left: 280px; padding: 40px; min-height: 100vh; }
+        .page-header h1 { font-size: 30px; color: #2d3748; margin-bottom: 10px; }
+        .page-header p { color: #718096; margin-bottom: 30px; }
+
+        /* Search Bar Styling */
+        .search-container { position: relative; margin-bottom: 25px; }
+        .search-input { width: 100%; padding: 12px 15px 12px 45px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; outline: none; transition: 0.3s; }
+        .search-input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 18px; }
+
+        .list-container { background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        
+        .student-row { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #f1f5f9; transition: 0.2s; }
+        .student-row:hover { background: #f8fafc; }
+        .student-row:last-child { border-bottom: none; }
+        
+        .student-info h3 { font-size: 16px; color: #2d3748; margin-bottom: 4px; }
+        .student-info span { font-size: 13px; color: #718096; background: #f7fafc; padding: 3px 8px; border-radius: 10px; }
+        
+        .btn-view { padding: 8px 16px; background: #edf2f7; color: #4a5568; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; }
+        .btn-view:hover { background: #cbd5e0; }
+
+        .no-results { display: none; padding: 20px; text-align: center; color: #a0aec0; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">📊</div>
+            <div class="sidebar-title">Digital Attendance</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="/dashboard"><span class="menu-icon">🏠</span> Dashboard</a></li>
+            <li class="menu-item"><a href="/students/add"><span class="menu-icon">➕</span> Add Student</a></li>
+            <li class="menu-item"><a href="/students"><span class="menu-icon">👥</span> Student Database</a></li>
+            <li class="menu-item"><a href="/webcam"><span class="menu-icon">📸</span> Webcam Scanner</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item"><a href="/attendance/today"><span class="menu-icon">📅</span> Today's Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/monthly"><span class="menu-icon">📊</span> Monthly Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/student_list" class="active"><span class="menu-icon">📝</span> Student Reports</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item logout-item"><a href="/logout"><span class="menu-icon">🚪</span> Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Student Reports</h1>
+            <p>Select a student to view their individual monthly performance.</p>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search by student name or roll number...">
+        </div>
+
+        <div class="list-container" id="studentList">
+            {% for s in students %}
+            <div class="student-row" data-name="{{ s.full_name|lower }}" data-roll="{{ s.roll_no|lower }}">
+                <div class="student-info">
+                    <h3>{{ s.full_name }}</h3>
+                    <span>{{ s.roll_no }}</span>
+                </div>
+                <a href="/attendance/student/{{ s.id }}" class="btn-view">View Report →</a>
+            </div>
+            {% endfor %}
+            <div class="no-results" id="noResults">No students found matching your search.</div>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const rows = document.querySelectorAll('.student-row');
+        const noResults = document.getElementById('noResults');
+
+        searchInput.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+            let hasVisible = false;
+
+            rows.forEach(row => {
+                const name = row.getAttribute('data-name');
+                const roll = row.getAttribute('data-roll');
+
+                if (name.includes(term) || roll.includes(term)) {
+                    row.style.display = 'flex';
+                    hasVisible = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (!hasVisible) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

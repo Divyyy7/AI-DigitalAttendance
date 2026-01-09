@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attendance Report - {{ date }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; }
+
+        .sidebar { width: 280px; height: 100vh; background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%); position: fixed; left: 0; top: 0; padding: 30px 20px; overflow-y: auto; }
+        .sidebar-header { margin-bottom: 40px; text-align: center; }
+        .sidebar-logo { width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .sidebar-title { color: white; font-size: 20px; font-weight: 700; }
+        .sidebar-menu { list-style: none; }
+        .menu-item a { display: flex; align-items: center; padding: 14px 18px; color: #cbd5e0; text-decoration: none; border-radius: 12px; transition: all 0.3s; font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+        .menu-item a:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+        .menu-item a.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .menu-icon { margin-right: 12px; }
+        .menu-separator { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .logout-item a { background: rgba(239,68,68,0.2); color: #fc8181; }
+
+        .main-content { margin-left: 280px; padding: 40px; min-height: 100vh; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-header h1 { font-size: 30px; color: #2d3748; }
+
+        .btn-export { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); transition: 0.3s; }
+        .btn-export:hover { transform: translateY(-2px); }
+
+        .table-container { background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f7fafc; }
+        th { padding: 18px 20px; text-align: left; font-weight: 700; color: #2d3748; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; font-size: 14px; }
+        td { padding: 18px 20px; color: #4a5568; border-bottom: 1px solid #f1f5f9; }
+        
+        .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .present { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
+        .absent { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
+        .status-badge::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">📊</div>
+            <div class="sidebar-title">Digital Attendance</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="/dashboard"><span class="menu-icon">🏠</span> Dashboard</a></li>
+            <li class="menu-item"><a href="/students/add"><span class="menu-icon">➕</span> Add Student</a></li>
+            <li class="menu-item"><a href="/students"><span class="menu-icon">👥</span> Student Database</a></li>
+            <li class="menu-item"><a href="/webcam"><span class="menu-icon">📸</span> Webcam Scanner</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item"><a href="/attendance/today"><span class="menu-icon">📅</span> Today's Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/monthly" class="active"><span class="menu-icon">📊</span> Monthly Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/student_list"><span class="menu-icon">📝</span> Student Reports</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item logout-item"><a href="/logout"><span class="menu-icon">🚪</span> Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1>📅 Report: {{ date.strftime('%B %d, %Y') }}</h1>
+            <a href="/export_day/{{ date.day }}" class="btn-export">📥 Export Excel</a>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Roll Number</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for full_name, roll_no, status in records %}
+                    <tr>
+                        <td><strong>{{ full_name }}</strong></td>
+                        <td>{{ roll_no }}</td>
+                        <td>
+                            <span class="status-badge {{ status|lower }}">{{ status }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align:center; padding: 30px;">No records found for this date.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

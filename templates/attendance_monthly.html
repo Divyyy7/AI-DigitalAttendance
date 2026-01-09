@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Attendance - Digital Attendance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+        }
+
+        /* --- Sidebar Styles --- */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 30px 20px;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header { margin-bottom: 40px; text-align: center; }
+        .sidebar-logo {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px; margin: 0 auto 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px;
+        }
+
+        .sidebar-title { color: white; font-size: 20px; font-weight: 700; }
+        .sidebar-menu { list-style: none; }
+        .menu-item { margin-bottom: 8px; }
+
+        .menu-item a {
+            display: flex; align-items: center; padding: 14px 18px;
+            color: #cbd5e0; text-decoration: none; border-radius: 12px;
+            transition: all 0.3s ease; font-size: 15px; font-weight: 500;
+        }
+
+        .menu-item a:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+        .menu-item a.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .menu-icon { margin-right: 12px; font-size: 20px; width: 24px; text-align: center; }
+        .menu-separator { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 20px 0; }
+        .logout-item a { background: rgba(239, 68, 68, 0.2); color: #fc8181; }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: 280px;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 { font-size: 32px; color: #2d3748; }
+
+        .month-selector {
+            display: flex; align-items: center; gap: 15px;
+            background: white; padding: 12px 20px; border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* --- Calendar Grid --- */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .day-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .day-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        /* Gradient header on hover */
+        .day-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 4px; background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0); transition: 0.3s;
+        }
+        .day-card:hover::before { transform: scaleX(1); }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f7fafc;
+        }
+
+        .day-number { font-size: 28px; font-weight: 700; color: #2d3748; }
+        
+        .day-name {
+            font-size: 13px; font-weight: 600; color: #718096;
+            background: #f7fafc; padding: 4px 12px; border-radius: 20px;
+        }
+
+        .day-stats { display: flex; flex-direction: column; gap: 10px; }
+
+        .stat-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 600;
+        }
+
+        .stat-row.present { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .stat-row.absent { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+
+        .stat-label { display: flex; align-items: center; gap: 6px; }
+
+        .no-data {
+            color: #cbd5e0; text-align: center; padding: 20px 0; font-size: 14px;
+        }
+
+        /* --- Special Day Styles --- */
+        /* Highlights weekends in a soft yellow */
+        .day-card.weekend {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-color: #fde68a;
+        }
+
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0; padding: 20px; }
+            .sidebar { display: none; }
+            .calendar-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">📊</div>
+            <div class="sidebar-title">Digital Attendance</div>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="/dashboard"><span class="menu-icon">🏠</span> Dashboard</a></li>
+            <li class="menu-item"><a href="/students/add"><span class="menu-icon">➕</span> Add Student</a></li>
+            <li class="menu-item"><a href="/students"><span class="menu-icon">👥</span> Student Database</a></li>
+            <li class="menu-item"><a href="/webcam"><span class="menu-icon">📸</span> Webcam Scanner</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item"><a href="/attendance/today"><span class="menu-icon">📅</span> Today's Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/monthly" class="active"><span class="menu-icon">📊</span> Monthly Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/student_list"><span class="menu-icon">📝</span> Student Reports</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item logout-item"><a href="/logout"><span class="menu-icon">🚪</span> Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1>📊 Monthly Overview</h1>
+            
+            <div class="month-selector">
+                <span style="font-weight: 600; color: #4a5568;">📅</span>
+                <span style="font-weight: 600; color: #2d3748;">
+                    {{ date(year, month, 1).strftime('%B %Y') }}
+                </span>
+            </div>
+        </div>
+
+        <div class="calendar-grid">
+            {% for day in days %}
+                {% set d = date(year, month, day) %}
+                {% set day_name = d.strftime('%a') %}
+                {% set is_weekend = day_name in ['Sat', 'Sun'] %}
+                
+                <a href="/attendance/day/{{ day }}" class="day-card {% if is_weekend %}weekend{% endif %}">
+                    <div class="day-header">
+                        <div class="day-number">{{ day }}</div>
+                        <div class="day-name">{{ day_name }}</div>
+                    </div>
+
+                    {% if summary[day] %}
+                        <div class="day-stats">
+                            <div class="stat-row present">
+                                <span class="stat-label">✅ Present</span>
+                                <span>{{ summary[day].present }}</span>
+                            </div>
+                            <div class="stat-row absent">
+                                <span class="stat-label">❌ Absent</span>
+                                <span>{{ summary[day].absent }}</span>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="no-data">-- No Data --</div>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Digital Attendance</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; }
+
+        /* Sidebar (Consistent) */
+        .sidebar { width: 280px; height: 100vh; background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%); position: fixed; left: 0; top: 0; padding: 30px 20px; box-shadow: 4px 0 20px rgba(0,0,0,0.1); overflow-y: auto; z-index: 100; }
+        .sidebar-header { margin-bottom: 40px; text-align: center; }
+        .sidebar-logo { width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .sidebar-title { color: white; font-size: 20px; font-weight: 700; }
+        .sidebar-menu { list-style: none; }
+        .menu-item { margin-bottom: 8px; }
+        .menu-item a { display: flex; align-items: center; padding: 14px 18px; color: #cbd5e0; text-decoration: none; border-radius: 12px; transition: all 0.3s ease; font-size: 15px; font-weight: 500; }
+        .menu-item a:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+        .menu-item a.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .menu-icon { margin-right: 12px; font-size: 20px; width: 24px; text-align: center; }
+        .menu-separator { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 20px 0; }
+        .logout-item a { background: rgba(239, 68, 68, 0.2); color: #fc8181; }
+
+        /* Main Content */
+        .main-content { margin-left: 280px; padding: 40px; min-height: 100vh; }
+        .page-header { margin-bottom: 40px; }
+        .page-header h1 { font-size: 32px; color: #2d3748; margin-bottom: 8px; }
+        .page-header p { color: #718096; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .stat-card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 20px; transition: transform 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .stat-icon { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        .icon-blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+        .icon-green { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; }
+        .icon-purple { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); color: white; }
+        .stat-info h3 { font-size: 28px; font-weight: 700; color: #2d3748; }
+        .stat-info p { color: #718096; font-size: 14px; font-weight: 600; }
+
+        /* Quick Actions */
+        .section-title { font-size: 20px; font-weight: 700; color: #2d3748; margin-bottom: 20px; }
+        .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .action-card { background: white; padding: 30px; border-radius: 16px; text-align: center; text-decoration: none; border: 1px solid #e2e8f0; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .action-card:hover { border-color: #667eea; transform: translateY(-5px); }
+        .action-icon { font-size: 40px; margin-bottom: 15px; display: block; }
+        .action-title { font-weight: 700; color: #2d3748; display: block; }
+        .action-desc { font-size: 13px; color: #718096; margin-top: 5px; display: block; }
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">📊</div>
+            <div class="sidebar-title">Digital Attendance</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="/dashboard" class="active"><span class="menu-icon">🏠</span> Dashboard</a></li>
+            <li class="menu-item"><a href="/students/add"><span class="menu-icon">➕</span> Add Student</a></li>
+            <li class="menu-item"><a href="/students"><span class="menu-icon">👥</span> Student Database</a></li>
+            <li class="menu-item"><a href="/webcam"><span class="menu-icon">📸</span> Webcam Scanner</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item"><a href="/attendance/today"><span class="menu-icon">📅</span> Today's Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/monthly"><span class="menu-icon">📊</span> Monthly Attendance</a></li>
+            <li class="menu-item"><a href="/attendance/student_list"><span class="menu-icon">📝</span> Student Reports</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item logout-item"><a href="/logout"><span class="menu-icon">🚪</span> Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1>👋 Welcome Back, Admin</h1>
+            <p>Here is the overview of today's attendance status.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-green">✅</div>
+                <div class="stat-info">
+                    <h3>{{ present|length }}</h3>
+                    <p>Present Today</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-purple">👥</div>
+                <div class="stat-info">
+                    <h3>Active</h3>
+                    <p>Attendance Tracking</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-blue">📅</div>
+                <div class="stat-info">
+                    <h3>Today</h3>
+                    <p>Real-time Status</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">🚀 Quick Actions</h2>
+        <div class="actions-grid">
+            <a href="/webcam" class="action-card">
+                <span class="action-icon">📸</span>
+                <span class="action-title">Launch Scanner</span>
+                <span class="action-desc">Start taking attendance</span>
+            </a>
+            <a href="/students/add" class="action-card">
+                <span class="action-icon">➕</span>
+                <span class="action-title">Add Student</span>
+                <span class="action-desc">Register new faces</span>
+            </a>
+            <a href="/attendance/today" class="action-card">
+                <span class="action-icon">📝</span>
+                <span class="action-title">View Report</span>
+                <span class="action-desc">Check today's list</span>
+            </a>
+            <a href="/students/update" class="action-card">
+                <span class="action-icon">✏️</span>
+                <span class="action-title">Update Data</span>
+                <span class="action-desc">Edit student details</span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

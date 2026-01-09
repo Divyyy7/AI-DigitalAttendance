@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Scanner - Digital Attendance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: white;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- Header --- */
+        .header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .status-badge.inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .status-badge.active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-badge.inactive .status-dot { background: #ef4444; }
+        .status-badge.active .status-dot { background: #22c55e; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* --- Main Layout --- */
+        .main-content {
+            padding: 30px;
+            max-width: 95%; 
+            margin: 0 auto;
+        }
+
+        .scanner-container {
+            display: grid;
+            grid-template-columns: 3.5fr 1fr; 
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* --- Video Section --- */
+        .video-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            width: 100%;
+            aspect-ratio: 16/9; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        #video-frame {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+            display: none;
+        }
+
+        .video-placeholder {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .video-placeholder-icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+        }
+
+        /* CHANGE: Moved overlay position from top-left to bottom-right */
+        .video-overlay {
+            position: absolute;
+            bottom: 30px; /* Was top: 30px */
+            right: 30px;  /* Was left: 30px */
+            display: none;
+        }
+
+        .recognition-status {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .recording-dot {
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+            box-shadow: 0 0 10px #ef4444;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* --- Controls --- */
+        .controls {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5); }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        .btn-stop:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5); }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* --- Info Panel --- */
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-label { font-size: 14px; color: rgba(255, 255, 255, 0.6); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 36px; font-weight: 700; color: white; }
+
+        .instructions {
+            margin-top: auto;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .instructions-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; color: #a5b4fc; }
+        .instructions ul { list-style: none; padding: 0; }
+        .instructions li { padding: 8px 0; color: rgba(255, 255, 255, 0.8); display: flex; gap: 10px; font-size: 14px; }
+        .instructions li::before { content: '✓'; color: #22c55e; font-weight: bold; }
+
+        /* --- Recent List --- */
+        .recent-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .recent-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+        .recent-list { 
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .recent-name { font-weight: 600; font-size: 15px; }
+        .recent-time { font-size: 13px; color: #94a3b8; }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .scanner-container { grid-template-columns: 2fr 1fr; }
+        }
+
+        @media (max-width: 1024px) { 
+            .scanner-container { grid-template-columns: 1fr; } 
+            .video-wrapper { aspect-ratio: 4/3; }
+            .main-content { max-width: 100%; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="/dashboard" class="back-btn">← Dashboard</a>
+            <div class="header-title">Live Attendance Scanner</div>
+        </div>
+        <div class="status-badge inactive" id="statusBadge">
+            <span class="status-dot"></span> Inactive
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="scanner-container">
+            <div class="video-section">
+                <div class="video-wrapper">
+                    <img id="video-frame" src="" alt="Webcam Feed">
+                    
+                    <div class="video-placeholder" id="placeholder">
+                        <div class="video-placeholder-icon">📸</div>
+                        <p style="font-size: 18px;">Click <b>Start Scanner</b> to initialize camera</p>
+                    </div>
+
+                    <div class="video-overlay" id="overlay">
+                        <div class="recognition-status">
+                            <div class="recording-dot"></div>
+                            Scanning Face Data...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-start" onclick="startStream()" id="startBtn">
+                        ▶ Start Scanner
+                    </button>
+                    <button class="btn btn-stop" onclick="stopStream()" id="stopBtn" disabled>
+                        ⏹ Stop Scanner
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-title">📊 Live Stats</div>
+                
+                <div class="stat-item">
+                    <div class="stat-label">Recognized Today</div>
+                    <div class="stat-value" id="presentCount">0</div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-label">Session Duration</div>
+                    <div class="stat-value" id="duration">00:00</div>
+                </div>
+
+                <div class="instructions">
+                    <div class="instructions-title">💡 Quick Tips</div>
+                    <ul>
+                        <li>Ensure good lighting</li>
+                        <li>Face camera directly</li>
+                        <li>Hold steady for 1s</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="recent-section">
+            <div class="recent-title">🕒 Recent Recognitions</div>
+            <div class="recent-list" id="recentList">
+                <p style="color: rgba(255, 255, 255, 0.5); padding: 10px; grid-column: 1/-1;">
+                    Waiting for scanner input...
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let startTime = null;
+        let timerInterval = null;
+
+        function startStream() {
+            startTime = Date.now();
+            
+            // UI Updates
+            document.getElementById('video-frame').style.display = 'block';
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('overlay').style.display = 'block';
+            
+            // Connect Feed
+            document.getElementById('video-frame').src = '/video_feed';
+            
+            // Buttons
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            
+            // Badge
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'status-badge active';
+            badge.innerHTML = '<span class="status-dot"></span> Active';
+            
+            // Timer
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            // Backend
+            fetch('/start_stream');
+        }
+
+        function stopStream() {
+            // UI Updates
+            document.getElementById('video-frame').style.display = 'none';
+            document.getElementById('placeholder').style.display = 'block';
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('video-frame').src = '';
+            
+            // Buttons
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            
+            // Badge
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'status-badge inactive';
+            badge.innerHTML = '<span class="status-dot"></span> Inactive';
+            
+            clearInterval(timerInterval);
+            fetch('/stop_stream');
+        }
+
+        function updateTimer() {
+            if (!startTime) return;
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('duration').textContent = `${minutes}:${seconds}`;
+        }
+    </script>
+</body>
+</html>

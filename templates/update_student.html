@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Student - Digital Attendance</title>
+    <style>
+        /* Reusing consistent CSS from add_student.html */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; }
+        
+        .sidebar { width: 280px; height: 100vh; background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%); position: fixed; left: 0; top: 0; padding: 30px 20px; overflow-y: auto; }
+        .sidebar-header { margin-bottom: 40px; text-align: center; }
+        .sidebar-logo { width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .sidebar-title { color: white; font-size: 20px; font-weight: 700; }
+        .sidebar-menu { list-style: none; }
+        .menu-item a { display: flex; align-items: center; padding: 14px 18px; color: #cbd5e0; text-decoration: none; border-radius: 12px; transition: all 0.3s; font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+        .menu-item a:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+        .menu-item a.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .menu-icon { margin-right: 12px; }
+        .menu-separator { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        .logout-item a { background: rgba(239,68,68,0.2); color: #fc8181; }
+
+        .main-content { margin-left: 280px; padding: 40px; min-height: 100vh; }
+        .page-header h1 { font-size: 32px; color: #2d3748; margin-bottom: 8px; }
+        .page-header p { color: #718096; }
+
+        .form-container { max-width: 800px; background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-top: 30px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+        .form-group label { display: block; color: #2d3748; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+        input[type="text"], input[type="email"] { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; background: #f7fafc; }
+        input:focus { outline: none; border-color: #667eea; background: white; }
+        
+        .btn { padding: 15px 30px; border-radius: 12px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; transition: 0.3s; flex: 1; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-secondary { background: #edf2f7; color: #4a5568; margin-right: 10px; }
+        .form-actions { display: flex; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">📊</div>
+            <div class="sidebar-title">Digital Attendance</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="/dashboard"><span class="menu-icon">🏠</span> Dashboard</a></li>
+            <li class="menu-item"><a href="/students/add"><span class="menu-icon">➕</span> Add Student</a></li>
+            <li class="menu-item"><a href="/students/update" class="active"><span class="menu-icon">✏️</span> Update Student</a></li>
+            <li class="menu-item"><a href="/students"><span class="menu-icon">👥</span> Student Database</a></li>
+            <li class="menu-item"><a href="/webcam"><span class="menu-icon">📸</span> Webcam Scanner</a></li>
+            <div class="menu-separator"></div>
+            <li class="menu-item logout-item"><a href="/logout"><span class="menu-icon">🚪</span> Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Update Student Details</h1>
+            <p>Editing profile for <strong>{{ student.full_name }}</strong></p>
+        </div>
+
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="full_name" value="{{ student.full_name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Roll Number</label>
+                        <input type="text" name="roll_no" value="{{ student.roll_no }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mobile Number</label>
+                        <input type="text" name="mobile" value="{{ student.mobile or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" name="email" value="{{ student.email or '' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Update Face Images (Optional)</label>
+                    <input type="file" name="images" multiple style="margin-top:5px;">
+                    <p style="color:#718096; font-size:12px; margin-top:5px;">Only upload if you want to replace/add to the current dataset.</p>
+                </div>
+
+                <div class="form-actions">
+                    <a href="/students/update" class="btn btn-secondary" style="text-align:center; text-decoration:none;">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
