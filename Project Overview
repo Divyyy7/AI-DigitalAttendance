@@ -1,0 +1,171 @@
+==============================================================================
+DIGITAL ATTENDANCE SYSTEM - PROJECT DOCUMENTATION
+==============================================================================
+
+------------------------------------------------------------------------------
+1. PROJECT OVERVIEW
+------------------------------------------------------------------------------
+This is a Web-based Face Recognition Attendance System. It uses Computer Vision 
+to identify students from a live webcam feed and automatically marks their 
+attendance in a database. The system allows administrators to register students, 
+view real-time recognition stats, and generate detailed monthly reports.
+
+------------------------------------------------------------------------------
+2. CORE WORKFLOW PIPELINE
+------------------------------------------------------------------------------
+The system operates on a "Register -> Train -> Recognize" pipeline:
+
+1. REGISTRATION (Data Collection):
+   - Admin uploads student photos via the web interface.
+   - The system saves these images and immediately processes them to extract 
+     facial features.
+
+2. TRAINING (The "Learning" Phase):
+   - The system gathers all extracted features and trains a KNN (K-Nearest 
+     Neighbors) classifier.
+   - This acts as the project's "memory," linking specific face patterns to 
+     student names.
+
+3. RECOGNITION (The "Test" Phase):
+   - When the webcam is active, the system scans live video.
+   - It converts detected faces into data and queries the KNN model to identify 
+     the person.
+   - If matched, attendance is marked in the database.
+
+------------------------------------------------------------------------------
+3. CODE FILE BREAKDOWN (DETAILED)
+------------------------------------------------------------------------------
+
+--- A. BACKEND LOGIC (Python/Flask) ------------------------------------------
+
+1. app.py (The Master Controller)
+   - Use Case: Runs the Flask web server and orchestrates the entire application.
+   - Key Logic:
+     * Routes: Defines all URLs (e.g., /dashboard, /login).
+     * Webcam Loop (gen_frames): Captures video, calls the recognition script, 
+       and yields the video stream to the browser.
+     * Subprocesses: Automatically triggers generate_embeddings_per_image.py 
+       and train_knn.py in the background whenever a new student is added.
+   - Connectivity: Connects the HTML frontend to the models.py database and 
+     recognize_knn_attendance.py CV logic.
+
+2. models.py (The Database Schema)
+   - Use Case: Defines the structure of the SQLite database tables.
+   - Key Logic:
+     * Student: Stores static info (Name, Roll No, Image Folder).
+     * Attendance: Stores daily logs (Student ID, Date, Status, Timestamp).
+     * FaceEmbedding: Links specific math files (.pt) to students.
+
+3. create_admin.py & insert_students.py (Setup Scripts)
+   - Use Case: Utilities for initial system setup.
+   - create_admin.py: Creates the initial admin account so you can log in.
+   - insert_students.py: Scans the student_images folder and syncs manual file 
+     uploads into the database.
+
+--- B. COMPUTER VISION & ML (The "Brain") ------------------------------------
+
+4. generate_embeddings_per_image.py (The Translator)
+   - Use Case: Converts raw photos into "Embeddings" (lists of 512 numbers).
+   - Logic: 
+     * Uses MTCNN to detect/crop faces.
+     * Uses InceptionResnetV1 to calculate the 512-dimensional vector.
+     * Saves results as .pt files.
+   - Connectivity: Triggered by app.py after a new student is registered.
+
+5. train_knn.py (The Teacher)
+   - Use Case: Organizes the embeddings so the system can search them quickly.
+   - Logic:
+     * Normalization: Scales all vectors to length 1.0 (L2 Norm) to ignore 
+       lighting differences.
+     * Fitting: Trains a K-Nearest Neighbors (KNN) classifier using Cosine 
+       Similarity (measuring angles between faces).
+   - Output: Saves the trained model to knn_model.joblib.
+
+6. recognize_knn_attendance.py (The Real-Time Scanner)
+   - Use Case: The real-time decision maker during scanning.
+   - Logic:
+     * Receives a live frame from app.py.
+     * Generates a live embedding and normalizes it.
+     * Queries the knn_model for the closest match.
+     * Thresholding: Rejects the match if the distance is > 0.30 or confidence 
+       < 1.00 (marks as "Unknown").
+
+--- C. WEB INTERFACE (HTML Files) --------------------------------------------
+
+-- Authentication & Core --
+* login.html: The security gateway for admin access.
+* base.html / sidebar.html: The skeleton templates providing consistent 
+  navigation and styling across all pages.
+* flash_messages.html: Handles temporary success/error notifications.
+* landing.html: The entry page of the application.
+
+-- Dashboard & Scanning --
+* dashboard.html: Displays live stats like total students present.
+* start_webcam.html: The scanning interface. Uses JavaScript to fetch the 
+  /video_feed stream and start the recognition backend.
+
+-- Student Management --
+* add_student.html: Form for registering new students and uploading photos.
+* students_list.html: Searchable catalog of all registered students.
+* select_student_update.html / update_student.html: Workflow for finding and 
+  editing existing student details.
+
+-- Attendance Reports --
+* attendance_today.html: Table showing who is present vs. absent right now.
+* attendance_monthly.html: Calendar view showing daily summaries for the whole month.
+* attendance_day.html: Detailed log for a specific past date.
+* attendance_student_list.html / attendance_student_month.html: Workflow to 
+  view a specific student's individual performance report.
+
+------------------------------------------------------------------------------
+4. DEEP DIVE: MACHINE LEARNING LOGIC EXPLAINED
+------------------------------------------------------------------------------
+
+A. Embeddings (Data Representation)
+-----------------------------------
+Computers cannot "see" faces; they see grids of pixels. To solve this, your 
+system converts every face image into a list of 512 numbers called an Embedding.
+- Concept: This transforms a face from "Pixel Space" (confusing) to "Feature 
+  Space" (meaningful).
+- Example: Even if a student is in a dark room vs. bright sunlight, their 
+  embedding numbers (representing features like eye distance) remain mathematically 
+  similar.
+
+B. Normalization (The Equalizer)
+--------------------------------
+Before comparing faces, the system performs L2 Normalization.
+- The Math: It shrinks or stretches every embedding vector so its total length 
+  is exactly 1.0.
+- Why: This ensures that "Bright Photos" (high pixel values) and "Dark Photos" 
+  (low pixel values) are treated equally. The model focuses only on the 
+  *direction* (features) of the vector, not its *magnitude* (brightness).
+
+C. KNN & Cosine Similarity (The Algorithm)
+------------------------------------------
+Your project uses K-Nearest Neighbors (KNN) with a Cosine Metric.
+- Training: The model doesn't learn a formula. It simply *memorizes* (indexes) 
+  all normalized embeddings into a search tree.
+- Recognition: When a new face appears:
+    1. The model calculates the Cosine Similarity (the angle) between the new 
+       face and stored faces.
+       Formula: d(Q, P) = 1 - Cosine Similarity
+    2. It sorts the known faces by distance (Smallest distance = Best match).
+    3. It picks the closest neighbor.
+    4. Thresholding: If the closest neighbor is still "too far" (Distance > 0.30), 
+       the system rejects it as "Unknown" to prevent false positives.
+
+------------------------------------------------------------------------------
+5. SYSTEM CONNECTIVITY MAP
+------------------------------------------------------------------------------
+1. User uploads photo on add_student.html.
+2. app.py saves the photo and triggers generate_embeddings_per_image.py.
+3. generate_embeddings... creates .pt files (math data).
+4. app.py triggers train_knn.py to update the "Brain" (knn_model.joblib).
+5. User opens start_webcam.html.
+6. app.py starts the camera and passes images to recognize_knn_attendance.py.
+7. recognize_knn... uses the model to find a name and returns it.
+8. app.py marks the database via models.py and updates the live view.
+
+==============================================================================
+END OF DOCUMENTATION
+==============================================================================

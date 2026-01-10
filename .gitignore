@@ -131,3 +131,7 @@ attendance.db
 *.xlsx
 today_attendance.xlsx
 divy_attendance_1_2026.xlsx
+
+#folder to ignore
+student_images/
+embeddings/
