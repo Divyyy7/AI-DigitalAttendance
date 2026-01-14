@@ -9,11 +9,8 @@ class Student(db.Model):
 
     full_name = db.Column(db.String(120), nullable=False)
     roll_no = db.Column(db.String(50), unique=True, nullable=False)
-
-    # NEW FIELDS
     mobile = db.Column(db.String(20), nullable=True)
     email = db.Column(db.String(120), nullable=True)
-
     image_folder = db.Column(db.String(300), nullable=False)  # folder storing multiple face images
 
     # relationships

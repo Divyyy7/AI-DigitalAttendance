@@ -563,7 +563,17 @@ def notify_monthly():
     flash("Monthly notifications sent successfully")
     return redirect(url_for("attendance_monthly"))
 
-
+@app.route("/get_attendance_count")
+@login_required
+def get_attendance_count():
+    try:
+        today = date.today()
+        # This counts unique students who are marked "Present" today
+        count = Attendance.query.filter_by(date=today, status="Present").count()
+        return jsonify({"success": True, "count": count})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+    
 # ---------------- INIT ----------------
 if __name__ == "__main__":
     with app.app_context():

@@ -154,11 +154,10 @@
             margin-bottom: 20px;
         }
 
-        /* CHANGE: Moved overlay position from top-left to bottom-right */
         .video-overlay {
             position: absolute;
-            bottom: 30px; /* Was top: 30px */
-            right: 30px;  /* Was left: 30px */
+            bottom: 30px; 
+            right: 30px;  
             display: none;
         }
 
@@ -395,6 +394,24 @@
         let startTime = null;
         let timerInterval = null;
 
+        // --- NEW: Real-Time Attendance Counter Logic ---
+        function updateAttendanceCount() {
+            fetch('/get_attendance_count')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const countElement = document.getElementById('presentCount');
+                        countElement.innerText = data.count;
+                    }
+                })
+                .catch(error => console.error('Error fetching count:', error));
+        }
+
+        // Run the update every 3 seconds
+        setInterval(updateAttendanceCount, 3000);
+        // Initial call
+        window.onload = updateAttendanceCount;
+
         function startStream() {
             startTime = Date.now();
             
@@ -438,7 +455,10 @@
             badge.className = 'status-badge inactive';
             badge.innerHTML = '<span class="status-dot"></span> Inactive';
             
+            // Reset Timer
             clearInterval(timerInterval);
+            document.getElementById('duration').textContent = '00:00';
+            
             fetch('/stop_stream');
         }
 
